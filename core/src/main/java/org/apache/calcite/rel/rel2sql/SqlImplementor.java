@@ -25,6 +25,7 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexLocalRef;
@@ -512,6 +513,15 @@ public abstract class SqlImplementor {
         elseNode = caseNodeList.get(caseNodeList.size() - 1);
         return new SqlCase(POS, valueNode, new SqlNodeList(whenList, POS),
             new SqlNodeList(thenList, POS), elseNode);
+
+      case FIELD_ACCESS:
+        final RexFieldAccess fieldAccess = (RexFieldAccess) rex;
+        final SqlNode[] operands = new SqlNode[] {
+          toSql(program, fieldAccess.getReferenceExpr()),
+          new SqlIdentifier(fieldAccess.getField().getName(), SqlParserPos.ZERO)
+        };
+        return new SqlBasicCall(SqlStdOperatorTable.DOT, operands,
+                SqlParserPos.ZERO);
 
       default:
         final RexCall call = (RexCall) stripCastFromString(rex);
